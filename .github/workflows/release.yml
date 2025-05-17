@@ -73,7 +73,7 @@ jobs:
             ./dependencies.txt=/usr/share/agent/dependencies.txt
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: packages-${{ matrix.arch }}
           path: |
