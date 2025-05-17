@@ -1,0 +1,7 @@
+okular
+gedit
+eog
+vlc
+onlyoffice-desktopeditors
+file-roller
+xdg-utils

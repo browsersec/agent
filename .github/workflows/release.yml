@@ -1,0 +1,115 @@
+name: Release Package
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+        include:
+          - arch: amd64
+            goarch: amd64
+            deb_arch: amd64
+            rpm_arch: x86_64
+          - arch: arm64
+            goarch: arm64
+            deb_arch: arm64
+            rpm_arch: aarch64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+
+      - name: Install FPM
+        run: gem install fpm
+
+      - name: Get the version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      - name: Build binary for ${{ matrix.arch }}
+        run: GOARCH=${{ matrix.goarch }} go build -o agent
+
+      - name: Make scripts executable
+        run: chmod +x scripts/postinstall.sh
+
+      - name: Package DEB for ${{ matrix.arch }}
+        run: |
+          fpm -s dir -t deb -n agent -v ${{ env.VERSION }} \
+            --architecture ${{ matrix.deb_arch }} \
+            --description "Remote file opener via REST API" \
+            --maintainer "Sai Sanjay <saisanjay7660@gmail.com>" \
+            --depends "apt" \
+            --after-install scripts/postinstall.sh \
+            --deb-pre-depends "apt" \
+            ./agent=/usr/local/bin/agent \
+            ./agent.service=/lib/systemd/system/agent.service \
+            ./dependencies.txt=/usr/share/agent/dependencies.txt
+
+      - name: Package RPM for ${{ matrix.arch }}
+        run: |
+          fpm -s dir -t rpm -n agent -v ${{ env.VERSION }} \
+            --architecture ${{ matrix.rpm_arch }} \
+            --description "Remote file opener via REST API" \
+            --maintainer "Sai Sanjay <saisanjay7660@gmail.com>" \
+            --depends "yum" \
+            --after-install scripts/postinstall.sh \
+            ./agent=/usr/local/bin/agent \
+            ./agent.service=/usr/lib/systemd/system/agent.service \
+            ./dependencies.txt=/usr/share/agent/dependencies.txt
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: packages-${{ matrix.arch }}
+          path: |
+            agent_${{ env.VERSION }}_${{ matrix.deb_arch }}.deb
+            agent-${{ env.VERSION }}-1.${{ matrix.rpm_arch }}.rpm
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: packages
+
+      - name: Display structure of downloaded files
+        run: ls -R packages
+
+      - name: Flatten directory structure
+        run: |
+          mkdir -p release_files
+          find packages -type f -name "*.deb" -o -name "*.rpm" | xargs -I {} cp {} release_files/
+
+      - name: Create "any" and "noarch" packages
+        run: |
+          # For demonstration, create symlinks to the amd64 packages
+          # In a real scenario, you might need to create truly architecture-independent packages
+          cd release_files
+          cp agent_${{ env.VERSION }}_amd64.deb agent_${{ env.VERSION }}_any.deb
+          cp agent-${{ env.VERSION }}-1.x86_64.rpm agent-${{ env.VERSION }}-1.noarch.rpm
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release_files/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

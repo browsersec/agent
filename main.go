@@ -32,7 +32,7 @@ func init() {
 	// Set default configuration
 	config = Config{
 		Port:            "8080",
-		UploadDirectory: "/tmp/file-opener-uploads",
+		UploadDirectory: "/tmp/agent-uploads",
 		FileTypeOpeners: map[string]string{
 			".pdf":  "okular",
 			".txt":  "gedit",

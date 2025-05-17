@@ -1,0 +1,12 @@
+[Unit]
+Description=remote file opener via rest api
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/agent
+Restart=on-failure
+User=root
+Environment=DISPLAY=:0
+
+[Install]
+WantedBy=multi-user.target
