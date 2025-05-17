@@ -27,7 +27,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.20'
+          go-version: '1.24'
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -40,6 +40,11 @@ jobs:
       - name: Get the version
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      - name: Fix go.mod version
+        run: |
+          # Update go.mod with a valid Go version
+          sed -i 's/go 1.24.3/go 1.24/' go.mod
 
       - name: Build binary for ${{ matrix.arch }}
         run: GOARCH=${{ matrix.goarch }} go build -o agent
