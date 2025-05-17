@@ -1,0 +1,39 @@
+{
+  "grpcPort": "50051",
+  "restPort": "8080",
+  "uploadDirectory": "/tmp/file-opener-uploads",
+  "fileTypeOpeners": {
+    ".pdf": "evince",
+    ".txt": "gedit",
+    ".png": "eog",
+    ".jpg": "eog",
+    ".jpeg": "eog",
+    ".gif": "eog",
+    ".mp4": "vlc",
+    ".mp3": "rhythmbox",
+    ".docx": "libreoffice",
+    ".xlsx": "libreoffice",
+    ".pptx": "libreoffice",
+    ".odt": "libreoffice",
+    ".ods": "libreoffice",
+    ".odp": "libreoffice"
+  },
+  "defaultOpener": "xdg-open",
+  "maxChunkSize": 4194304,
+  "allowedExtensions": [
+    ".pdf", 
+    ".txt", 
+    ".png", 
+    ".jpg", 
+    ".jpeg", 
+    ".gif", 
+    ".mp4", 
+    ".mp3", 
+    ".docx", 
+    ".xlsx", 
+    ".pptx", 
+    ".odt", 
+    ".ods", 
+    ".odp"
+  ]
+}
