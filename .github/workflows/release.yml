@@ -89,6 +89,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Get the version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -104,11 +107,24 @@ jobs:
 
       - name: Create "any" and "noarch" packages
         run: |
-          # For demonstration, create symlinks to the amd64 packages
-          # In a real scenario, you might need to create truly architecture-independent packages
+          # For demonstration, create copies of the amd64 packages for architecture-independent packages
           cd release_files
-          cp agent_${{ env.VERSION }}_amd64.deb agent_${{ env.VERSION }}_any.deb
-          cp agent-${{ env.VERSION }}-1.x86_64.rpm agent-${{ env.VERSION }}-1.noarch.rpm
+          ls -la
+          # Find the correct files dynamically instead of hardcoding names
+          AMDEB=$(find . -name "*amd64.deb" | head -1)
+          AMRPM=$(find . -name "*x86_64.rpm" | head -1)
+          
+          if [ -n "$AMDEB" ]; then
+            cp "$AMDEB" "agent_${VERSION}_any.deb"
+          else
+            echo "Warning: No amd64 DEB package found"
+          fi
+          
+          if [ -n "$AMRPM" ]; then
+            cp "$AMRPM" "agent-${VERSION}-1.noarch.rpm"
+          else
+            echo "Warning: No x86_64 RPM package found"
+          fi
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
